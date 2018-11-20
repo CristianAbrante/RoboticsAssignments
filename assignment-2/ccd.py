@@ -63,7 +63,7 @@ def cin_dir(th,a):
 
 # aray de tipos de articulaciones
 # 0 -> articulación de rotación
-# 1 -> articulación prismáPráctica
+# 1 -> articulación prismatica
 tipo = [0, 0, 1]
 
 # límites articulares
@@ -71,8 +71,8 @@ limSup = [np.radians(90), np.radians(90), 5]
 limInf = [np.radians(-90), np.radians(-90), 0]
 
 # valores articulares arbitrarios para la cinemática directa inicial
-th=[0.,0.,0.] # Ángulos en radianes.
-a =[5.,5.,0.]
+th=[0.,0.,np.radians(90)] # Ángulos en radianes.
+a =[5.,5.,2.]
 L = sum(a) # variable para representación gráfica
 EPSILON = .01
 
