@@ -64,15 +64,15 @@ def cin_dir(th,a):
 # aray de tipos de articulaciones
 # 0 -> articulación de rotación
 # 1 -> articulación prismatica
-tipo = [0, 0, 1]
+tipo = [0, 0, 1, 1]
 
 # límites articulares
-limSup = [np.radians(90), np.radians(90), 5]
-limInf = [np.radians(-90), np.radians(-90), 0]
+limSup = [np.radians(90), np.radians(90), 10., 10.]
+limInf = [np.radians(-90), np.radians(-90), 0., 3.]
 
 # valores articulares arbitrarios para la cinemática directa inicial
-th=[0.,0.,np.radians(90)] # Ángulos en radianes.
-a =[5.,5.,2.]
+th=[0.,0.,0., np.radians(90)] # Ángulos en radianes.
+a =[5.,5.,5., 5.]
 L = sum(a) # variable para representación gráfica
 EPSILON = .01
 
@@ -99,31 +99,26 @@ while (dist > EPSILON and abs(prev-dist) > EPSILON/100.):
     # cálculo de la cinemática inversa
     index = len(th) - i - 1
 
-    efector = O[i][len(th)]
+    efector = O[i][-1]
     current_art = O[i][index]
 
     # articulacion de rotación
     if (tipo[index] == 0):
       v1 = np.subtract(objetivo, current_art)
       v2 = np.subtract(efector, current_art)
-      a1 = np.arctan2([v2[0]], [v2[1]])
-      a2 = np.arctan2([v1[0]], [v1[1]])
-      angle = a1 - a2
+      a1 = np.arctan2([v1[0]], [v1[1]])
+      a2 = np.arctan2([v2[0]], [v2[1]])
+      angle = a2 - a1
       th[index] = th[index] + angle
-      if (th[index] > np.pi):
-        th[index] -= 2 * np.pi
-      elif (th[index] < -np.pi):
-        th[index] += 2 * np.pi
-
       if (th[index] > limSup[index]):
         th[index] = limSup[index]
       elif (th[index] < limInf[index]):
         th[index] = limInf[index]
     # articulación prismática
     else:
-        w = np.sum(th[0 : index])
+        w = np.sum(th[0 : index + 1])
         d = np.dot(
-            [np.cos(w), np.sin(w)],
+            np.array([np.cos(w), np.sin(w)]).T,
             np.subtract(objetivo, efector)
         )
         a[index] = a[index] + d
