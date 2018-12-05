@@ -61,21 +61,32 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
   # Con el robot real se miden las distancias a las balizas.
   # Se crea una malla de puntos con una determinada precisión.
   # Se calcula la mejor pose mediante mesurnments_prob.
+  EPS = 0.1
+  list_size = int(round((2 * radio) / EPS))
+  imagen = [[0 for x in range(list_size)] for y in range(list_size)]
   real_mesurnments = real.sense(balizas)
-  imagen = []
   max_weight = -1
   max_x = 0
   max_y = 0
-  for x in range (centro[0] - radio, centro[0] + radio +1):
-      imagen.append([])
-      for y in range(centro[1] + radio, centro[1] - radio + 1):
+  i = 0
+  j = 0
+  x = centro[0] - radio
+  y = 0
+  while (i < list_size):
+      j = 0
+      y = centro[1] - radio
+      while (j < list_size):
           ideal.set(x, y, ideal.orientation)
-          weight = ideal.mesurnments_prob(real_mesurnments, balizas)
-          imagen[-1].append(weight)
+          weight = ideal.measurement_prob(real_mesurnments, balizas)
+          imagen[i][j] = weight
           if (weight > max_weight):
               max_weight = weight
               max_x = x
               max_y = y
+          j += 1
+          y += EPS
+      i += 1
+      x += EPS
 
   if mostrar:
     plt.ion() # modo interactivo
@@ -91,6 +102,8 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
     plt.show()
     raw_input()
     plt.clf()
+
+  ideal.set(max_x, max_y, ideal.orientation)
 
 # ******************************************************************************
 
@@ -137,12 +150,21 @@ tray_real = [real.pose()]     # Trayectoria seguida
 
 tiempo  = 0.
 espacio = 0.
+
+LOST_WEIGHT = 0.01
+localizacion(objetivos, real, ideal, ideal.pose(), 2, False)
+
 #random.seed(0)
 random.seed(datetime.now())
 for punto in objetivos:
   while distancia(tray_ideal[-1],punto) > EPSILON and len(tray_ideal) <= 1000:
-    pose = ideal.pose()
+    weight = ideal.measurement_prob(real.sense(objetivos), objetivos)
+    print weight
+    if (weight < LOST_WEIGHT):
+        localizacion(objetivos, real, ideal, ideal.pose(), 1, False)
 
+    # localizacion(objetivos, real, ideal, ideal.pose(), 1, False)
+    pose = ideal.pose()
     w = angulo_rel(pose,punto)
     if w > W:  w =  W
     if w < -W: w = -W
