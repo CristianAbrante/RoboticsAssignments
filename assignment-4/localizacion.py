@@ -141,7 +141,7 @@ ideal.set_noise(0,0,.1)   # Ruido lineal / radial / de sensado
 ideal.set(*P_INICIAL)     # operador 'splat'
 
 real = robot()
-real.set_noise(.01,.01,.1)  # Ruido lineal / radial / de sensado
+real.set_noise(.01,.05,.1)  # Ruido lineal / radial / de sensado
 real.set(*P_INICIAL)
 
 random.seed(0)
@@ -159,7 +159,6 @@ random.seed(datetime.now())
 for punto in objetivos:
   while distancia(tray_ideal[-1],punto) > EPSILON and len(tray_ideal) <= 1000:
     weight = ideal.measurement_prob(real.sense(objetivos), objetivos)
-    print weight
     if (weight < LOST_WEIGHT):
         localizacion(objetivos, real, ideal, ideal.pose(), 1, False)
 
