@@ -1,8 +1,9 @@
+
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Robótica Computacional - Curso 2014/2015
-# Grado en Ingeniería Informática (Cuarto)
+# Robotica Computacional - Curso 2014/2015
+# Grado en Ingenieria Informatica (Cuarto)
 # Clase robot
 
 from math import *
@@ -12,7 +13,7 @@ import copy
 
 class robot:
   def __init__(self):
-    # Inicializacion de pose y parámetros de ruído
+    # Inicializacion de pose y parametros de ruido
     self.x             = 0.
     self.y             = 0.
     self.orientation   = 0.
@@ -36,7 +37,7 @@ class robot:
     while self.orientation < -pi: self.orientation += 2*pi
 
   def set_noise(self, new_f_noise, new_t_noise, new_s_noise):
-    # Modificar los parámetros de ruído
+    # Modificar los parametros de ruido
     self.forward_noise = float(new_f_noise);
     self.turn_noise    = float(new_t_noise);
     self.sense_noise   = float(new_s_noise);
@@ -57,7 +58,7 @@ class robot:
     return d
 
   def move(self, turn, forward):
-    # Modificar pose del robot (holonómico)
+    # Modificar pose del robot (holonomico)
     self.orientation += float(turn) + random.gauss(0., self.turn_noise)
     while self.orientation >  pi: self.orientation -= 2*pi
     while self.orientation < -pi: self.orientation += 2*pi
@@ -76,8 +77,8 @@ class robot:
     self.y += sin(self.orientation) * dist
 
   def Gaussian(self, mu, sigma, x):
-    # Calcular la probabilidad de 'x' para una distribución normal
-    # de media 'mu' y desviación típica 'sigma'
+    # Calcular la probabilidad de 'x' para una distribucion normal
+    # de media 'mu' y desviacion tipica 'sigma'
     if sigma:
       return exp(-(((mu-x)/sigma)**2)/2)/(sigma*sqrt(2*pi))
     else:
@@ -96,12 +97,12 @@ class robot:
     return self.weight
 
   def __repr__(self):
-    # Representación de la clase robot
+    # Representacion de la clase robot
     return '[x=%.6s y=%.6s orient=%.6s]' % \
             (str(self.x), str(self.y), str(self.orientation))
 
 def hipotesis(pf):
-  # Pose de la partícula de mayor peso del filtro de partículas.
+  # Pose de la particula de mayor peso del filtro de particulas.
   return max(pf,key=lambda r:r.weight).pose()
 
 def resample(pf_in, particulas):
@@ -122,4 +123,3 @@ def resample(pf_in, particulas):
     pf_out[-1].old_weight = pf_out[-1].weight
     pf_out[-1].weight = 1.
   return pf_out
-
