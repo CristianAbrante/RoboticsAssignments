@@ -78,7 +78,7 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
       while (j < list_size):
           ideal.set(x, y, ideal.orientation)
           weight = ideal.measurement_prob(real_mesurnments, balizas)
-          imagen[i][j] = weight
+          imagen[j][i] = weight
           if (weight > max_weight):
               max_weight = weight
               max_x = x
@@ -87,6 +87,8 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
           y += EPS
       i += 1
       x += EPS
+
+  ideal.set(max_x, max_y, ideal.orientation)
 
   if mostrar:
     plt.ion() # modo interactivo
@@ -103,7 +105,6 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
     raw_input()
     plt.clf()
 
-  ideal.set(max_x, max_y, ideal.orientation)
 
 # ******************************************************************************
 
@@ -152,7 +153,7 @@ tiempo  = 0.
 espacio = 0.
 
 LOST_WEIGHT = 0.01
-localizacion(objetivos, real, ideal, ideal.pose(), 2, False)
+localizacion(objetivos, real, ideal, [4, 4], 5, True)
 
 #random.seed(0)
 random.seed(datetime.now())
