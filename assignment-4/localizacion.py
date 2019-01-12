@@ -64,29 +64,30 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
   EPS = 0.1
   list_size = int(round((2 * radio) / EPS))
   imagen = [[0 for x in range(list_size)] for y in range(list_size)]
-  real_mesurnments = real.sense(balizas)
+  real_measurements = real.sense(balizas)
   max_weight = -1
   max_x = 0
   max_y = 0
   i = 0
   j = 0
   x = centro[0] - radio
-  y = 0
+  y = centro[1] - radio
+
   while (i < list_size):
       j = 0
-      y = centro[1] - radio
+      x = centro[0] - radio
       while (j < list_size):
           ideal.set(x, y, ideal.orientation)
-          weight = ideal.measurement_prob(real_mesurnments, balizas)
-          imagen[j][i] = weight
+          weight = ideal.measurement_prob(real_measurements, balizas)
+          imagen[i][j] = weight
           if (weight > max_weight):
               max_weight = weight
               max_x = x
               max_y = y
           j += 1
-          y += EPS
+          x += EPS
       i += 1
-      x += EPS
+      y += EPS
 
   ideal.set(max_x, max_y, ideal.orientation)
 
@@ -105,6 +106,7 @@ def localizacion(balizas, real, ideal, centro, radio, mostrar=0):
     raw_input()
     plt.clf()
 
+  return max_weight
 
 # ******************************************************************************
 
@@ -153,7 +155,8 @@ tiempo  = 0.
 espacio = 0.
 
 LOST_WEIGHT = 0.01
-localizacion(objetivos, real, ideal, [4, 4], 5, True)
+random_position = [2, 2]
+localizacion(objetivos, real, ideal, random_position, 5, False)
 
 #random.seed(0)
 random.seed(datetime.now())
@@ -163,7 +166,6 @@ for punto in objetivos:
     if (weight < LOST_WEIGHT):
         localizacion(objetivos, real, ideal, ideal.pose(), 1, False)
 
-    # localizacion(objetivos, real, ideal, ideal.pose(), 1, False)
     pose = ideal.pose()
     w = angulo_rel(pose,punto)
     if w > W:  w =  W
