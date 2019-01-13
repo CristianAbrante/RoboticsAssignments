@@ -114,15 +114,16 @@ def peso_medio(filtro):
       if (filtro[i].weight > max_weight):
           max_weight = filtro[i].weight
       i += 1
-
-  return (sum_weight / len(filtro)) / max_weight
+  print "max weight ", max_weight
+  print "sum weight ", sum_weight
+  return (sum_weight / len(filtro)) / max_weight if max_weight != 0 else 0.0
 
 # ******************************************************************************
 
 random.seed(0)
 
 # Definici�n del robot:
-P_INICIAL = [0.,4.,0.] # Pose inicial (posici�n y orientacion)
+P_INICIAL = [3.,4.,0.] # Pose inicial (posici�n y orientacion)
 V_LINEAL  = .7         # Velocidad lineal    (m/s)
 V_ANGULAR = 140.       # Velocidad angular   (�/s)
 FPS       = 10.        # Resoluci�n temporal (fps)
@@ -161,14 +162,18 @@ real.set_noise(.01,.01,.01) # Ruido lineal / radial / de sensado
 real.set(*P_INICIAL)
 
 #inicializaci�n del filtro de part�culas y de la trayectoria
-filtro = genera_filtro(2000, objetivos, real)
+filtro = genera_filtro(N_INICIAL, objetivos, real)
 trayectoria = [hipotesis(filtro)]
 
+MAX_AREA = 0.5
+MAX_AVERAGE_WEIGHT = 0.2
 trayectreal = [real.pose()]
 tiempo  = 0.
 espacio = 0.
 for punto in objetivos:
   while distancia(trayectoria[-1],punto) > EPSILON and len(trayectoria) <= 1000:
+    pose =  hipotesis(filtro)
+    measurements = real.sense(objetivos)
 
     #seleccionar pose
     w = angulo_rel(pose,punto)
@@ -180,17 +185,31 @@ for punto in objetivos:
     if HOLONOMICO:
       if GIROPARADO and abs(w) > .01:v = 0
       real.move(w,v)
+      for particula in filtro:
+          particula.move(w,v)
+          particula.measurement_prob(measurements, objetivos)
     else:
       real.move_triciclo(w,v,LONGITUD)
+      for particula in filtro:
+          particula.move_triciclo(w, v, LONGITUD)
+          particula.measurement_prob(measurements, objetivos)
 
 
     # Seleccionar hip�tesis de localizaci�n y actualizar la trayectoria
-
-
+    trayectoria.append(hipotesis(filtro))
     trayectreal.append(real.pose())
     mostrar(objetivos,trayectoria,trayectreal,filtro)
 
+    disper = dispersion(filtro)
+    average_weight = peso_medio(filtro)
+    print "dispersion > ", disper
+    print "average weight >", average_weight
     # remuestreo
+    if disper > MAX_AREA or average_weight > MAX_AVERAGE_WEIGHT:
+        filtro = resample(filtro, N_PARTIC)
+        measurements = real.sense(objetivos)
+        for particula in filtro:
+            particula.measurement_prob(measurements, objetivos)
 
     espacio += v
     tiempo  += 1
