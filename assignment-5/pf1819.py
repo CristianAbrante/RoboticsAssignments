@@ -73,6 +73,7 @@ def genera_filtro(num_particulas, balizas, real, centro=[2,2], radio=3):
       y = np.random.uniform(centro[1] - radio, centro[1] + radio)
       orientation = np.random.uniform(-np.pi, np.pi);
       filtro[i].set(x, y, orientation)
+      filtro[i].set_noise(.01,.01,.01)
       filtro[i].measurement_prob(real_measurements, balizas)
       i += 1
 
@@ -114,15 +115,14 @@ def peso_medio(filtro):
       if (filtro[i].weight > max_weight):
           max_weight = filtro[i].weight
       i += 1
-
-  return (sum_weight / len(filtro)) / max_weight
+  return (sum_weight / len(filtro)) / max_weight if max_weight != 0 else 0.0
 
 # ******************************************************************************
 
 random.seed(0)
 
 # Definici�n del robot:
-P_INICIAL = [0.,4.,0.] # Pose inicial (posici�n y orientacion)
+P_INICIAL = [3.,4.,0.] # Pose inicial (posici�n y orientacion)
 V_LINEAL  = .7         # Velocidad lineal    (m/s)
 V_ANGULAR = 140.       # Velocidad angular   (�/s)
 FPS       = 10.        # Resoluci�n temporal (fps)
@@ -130,7 +130,7 @@ HOLONOMICO = 0         # Robot holon�mico
 GIROPARADO = 0         # Si tiene que tener vel. lineal 0 para girar
 LONGITUD   = .1        # Longitud del robot
 
-N_PARTIC  = 50         # Tama�o del filtro de part�culas
+N_PARTIC  = 100         # Tama�o del filtro de part�culas
 N_INICIAL = 2000       # Tama�o inicial del filtro
 
 # Definici�n de trayectorias:
@@ -161,36 +161,59 @@ real.set_noise(.01,.01,.01) # Ruido lineal / radial / de sensado
 real.set(*P_INICIAL)
 
 #inicializaci�n del filtro de part�culas y de la trayectoria
-filtro = genera_filtro(2000, objetivos, real)
+filtro = genera_filtro(N_INICIAL, objetivos, real)
 trayectoria = [hipotesis(filtro)]
 
+MAX_AREA = 0.8
+MAX_AVERAGE_WEIGHT = 0.01
 trayectreal = [real.pose()]
 tiempo  = 0.
 espacio = 0.
+
+measurements = real.sense(objetivos)
+print measurements
+for particula in filtro:
+    particula.measurement_prob(measurements, objetivos)
+
 for punto in objetivos:
   while distancia(trayectoria[-1],punto) > EPSILON and len(trayectoria) <= 1000:
-
     #seleccionar pose
+    pose =  hipotesis(filtro)
+
     w = angulo_rel(pose,punto)
     if w > W:  w =  W
     if w < -W: w = -W
     v = distancia(pose,punto)
     if (v > V): v = V
     if (v < 0): v = 0
+
     if HOLONOMICO:
       if GIROPARADO and abs(w) > .01:v = 0
       real.move(w,v)
+      measurements = real.sense(objetivos)
+      for particula in filtro:
+          particula.move(w,v)
+          particula.measurement_prob(measurements, objetivos)
     else:
       real.move_triciclo(w,v,LONGITUD)
+      measurements = real.sense(objetivos)
+      for particula in filtro:
+          particula.move_triciclo(w, v, LONGITUD)
+          particula.measurement_prob(measurements, objetivos)
 
 
     # Seleccionar hip�tesis de localizaci�n y actualizar la trayectoria
-
-
+    trayectoria.append(hipotesis(filtro))
     trayectreal.append(real.pose())
     mostrar(objetivos,trayectoria,trayectreal,filtro)
 
+    disper = dispersion(filtro)
+    average_weight = peso_medio(filtro)
+    print "dispersion > ", disper
+    print "average weight >", average_weight
     # remuestreo
+    if disper > MAX_AREA or average_weight < MAX_AVERAGE_WEIGHT:
+        filtro = resample(filtro, N_PARTIC)
 
     espacio += v
     tiempo  += 1
